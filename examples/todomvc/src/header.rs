@@ -1,11 +1,14 @@
 use sycamore::prelude::*;
+use sycamore::context::use_context;
 use wasm_bindgen::JsCast;
 use web_sys::{Event, KeyboardEvent};
+use log::debug;
 
 use crate::AppState;
 
 #[component(Header<G>)]
-pub fn header(app_state: AppState) -> Template<G> {
+pub fn header() -> Template<G> {
+    let app_state = use_context::<AppState>();
     let value = Signal::new(String::new());
 
     let handle_submit = cloned!((app_state, value) => move |event: Event| {
@@ -16,6 +19,7 @@ pub fn header(app_state: AppState) -> Template<G> {
             task = task.trim().to_string();
 
             if !task.is_empty() {
+                debug!("adding todo: {:?}", task);
                 app_state.add_todo(task);
                 value.set("".to_string());
             }

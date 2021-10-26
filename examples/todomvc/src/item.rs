@@ -1,4 +1,5 @@
 use sycamore::prelude::*;
+use sycamore::context::use_context;
 use wasm_bindgen::JsCast;
 use web_sys::{Event, HtmlInputElement, KeyboardEvent};
 
@@ -11,6 +12,8 @@ pub struct ItemProps {
 
 #[component(Item<G>)]
 pub fn item(props: ItemProps) -> Template<G> {
+    // uncomment the next line to trigger errors when creating a new Todo
+    //let app_st = use_context::<AppState>();
     let ItemProps { todo, app_state } = props;
 
     let title = cloned!((todo) => move || todo.get().title.clone());

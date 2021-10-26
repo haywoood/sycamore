@@ -1,9 +1,12 @@
 use sycamore::prelude::*;
+use sycamore::context::use_context;
 
 use crate::{AppState, Filter};
 
 #[component(Footer<G>)]
-pub fn footer(app_state: AppState) -> Template<G> {
+pub fn footer() -> Template<G> {
+    let app_state = use_context::<AppState>();
+
     let items_text = cloned!((app_state) => move || {
         match app_state.todos_left() {
             1 => "item",

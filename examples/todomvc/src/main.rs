@@ -5,8 +5,10 @@ mod item;
 mod list;
 
 use serde::{Deserialize, Serialize};
+use sycamore::context::{ContextProvider, ContextProviderProps};
 use sycamore::prelude::*;
 use uuid::Uuid;
+use log::debug;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Todo {
@@ -23,19 +25,20 @@ pub struct AppState {
 
 impl AppState {
     fn add_todo(&self, title: String) {
-        self.todos.set(
-            self.todos
-                .get()
-                .as_ref()
-                .clone()
-                .into_iter()
-                .chain(Some(Signal::new(Todo {
-                    title,
-                    completed: false,
-                    id: Uuid::new_v4(),
-                })))
-                .collect(),
-        )
+        let new_todos: Vec<Signal<Todo>> = self.todos
+                            .get()
+                            .as_ref()
+                            .clone()
+                            .into_iter()
+                            .chain(Some(Signal::new(Todo {
+                                title,
+                                completed: false,
+                                id: Uuid::new_v4(),
+                            })))
+                            .collect();
+
+        debug!("new todos: {:?}", new_todos);
+        self.todos.set(new_todos)
     }
 
     fn remove_todo(&self, id: Uuid) {
@@ -130,8 +133,11 @@ impl Filter {
 
 const KEY: &str = "todos-sycamore";
 
-#[component(App<G>)]
-fn app() -> Template<G> {
+fn main() {
+    console_error_panic_hook::set_once();
+    console_log::init_with_level(log::Level::Debug).unwrap();
+
+    // Initialize application state
     let local_storage = web_sys::window()
         .unwrap()
         .local_storage()
@@ -149,40 +155,27 @@ fn app() -> Template<G> {
         filter: Signal::new(Filter::get_filter_from_hash()),
     };
 
+    // Set up an effect that runs a function anytime app_state.todos changes
     create_effect(cloned!((local_storage, app_state) => move || {
         for todo in app_state.todos.get().iter() {
             todo.get(); // subscribe to changes in all todos
         }
-
         local_storage.set_item(KEY, &serde_json::to_string(app_state.todos.get().as_ref()).unwrap()).unwrap();
     }));
 
-    let todos_is_empty =
-        create_selector(cloned!((app_state) => move || app_state.todos.get().len() == 0));
-
-    template! {
-        div(class="todomvc-wrapper") {
-            section(class="todoapp") {
-                header::Header(app_state.clone())
-
-                (if !*todos_is_empty.get() {
-                    template! {
-                        list::List(app_state.clone())
-                        footer::Footer(app_state.clone())
+    sycamore::render(|| template! {
+        ContextProvider(ContextProviderProps {
+            value: app_state,
+            children: || template! {
+                div(class="todomvc-wrapper") {
+                    section(class="todoapp") {
+                        header::Header()
+                        list::List()
+                        footer::Footer()
                     }
-                } else {
-                    Template::empty()
-                })
+                    copyright::Copyright()
+                }
             }
-
-            copyright::Copyright()
-        }
-    }
-}
-
-fn main() {
-    console_error_panic_hook::set_once();
-    console_log::init_with_level(log::Level::Debug).unwrap();
-
-    sycamore::render(|| template! { App() });
+        })
+    });
 }

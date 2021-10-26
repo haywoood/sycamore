@@ -1,9 +1,11 @@
 use sycamore::prelude::*;
+use sycamore::context::use_context;
 
 use crate::{AppState, Filter};
 
 #[component(List<G>)]
-pub fn list(app_state: AppState) -> Template<G> {
+pub fn list() -> Template<G> {
+    let app_state = use_context::<AppState>();
     let todos_left = create_selector(cloned!((app_state) => move || {
         app_state.todos_left()
     }));
@@ -40,7 +42,7 @@ pub fn list(app_state: AppState) -> Template<G> {
                 Keyed(KeyedProps {
                     iterable: filtered_todos,
                     template: move |todo| template! {
-                        crate::item::Item(crate::item::ItemProps { todo, app_state: app_state.clone() })
+                        crate::item::Item(crate::item::ItemProps {todo, app_state: app_state.clone()})
                     },
                     key: |todo| todo.get().id,
                 })
@@ -48,3 +50,4 @@ pub fn list(app_state: AppState) -> Template<G> {
         }
     }
 }
+
