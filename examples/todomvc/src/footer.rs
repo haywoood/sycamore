@@ -1,7 +1,21 @@
-use sycamore::prelude::*;
 use sycamore::context::use_context;
+use sycamore::prelude::*;
 
 use crate::{AppState, Filter};
+
+#[component(FilterComponent<G>)]
+fn filter_component(filter: Filter) -> Template<G> {
+    template! {
+        li {
+            a(
+                class="",
+                href=filter.url(),
+            ) {
+                (format!("{:?}", filter))
+            }
+        }
+    }
+}
 
 #[component(Footer<G>)]
 pub fn footer() -> Template<G> {
@@ -18,9 +32,6 @@ pub fn footer() -> Template<G> {
         app_state.todos_left() < app_state.todos.get().len()
     }));
 
-    let app_state2 = app_state.clone();
-    let app_state3 = app_state.clone();
-
     template! {
         footer(class="footer") {
             span(class="todo-count") {
@@ -28,32 +39,14 @@ pub fn footer() -> Template<G> {
                 span { " " (items_text()) " left" }
             }
             ul(class="filters") {
-                Indexed(IndexedProps {
-                    iterable: Signal::new(vec![Filter::All, Filter::Active, Filter::Completed]).handle(),
-                    template: cloned!((app_state2) => move |filter| {
-                        let selected = cloned!((app_state2) => move || filter == *app_state2.filter.get());
-                        let set_filter = cloned!((app_state2) => move |filter| {
-                            app_state2.filter.set(filter)
-                        });
-
-                        template! {
-                            li {
-                                a(
-                                    class=if selected() { "selected" } else { "" },
-                                    href=filter.url(),
-                                    on:click=move |_| set_filter(filter),
-                                ) {
-                                    (format!("{:?}", filter))
-                                }
-                            }
-                        }
-                    })
-                })
+                FilterComponent(Filter::All)
+                FilterComponent(Filter::Active)
+                FilterComponent(Filter::Completed)
             }
 
             (if *has_completed_todos.get() {
                 template! {
-                    button(class="clear-completed", on:click=cloned!((app_state3) => move |_| app_state3.clear_completed())) {
+                    button(class="clear-completed") {
                         "Clear completed"
                     }
                 }

@@ -42,7 +42,7 @@ pub fn list() -> Template<G> {
                 Keyed(KeyedProps {
                     iterable: filtered_todos,
                     template: move |todo| template! {
-                        crate::item::Item(crate::item::ItemProps {todo, app_state: app_state.clone()})
+                        crate::item::Item(todo)
                     },
                     key: |todo| todo.get().id,
                 })
