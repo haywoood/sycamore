@@ -1,4 +1,5 @@
 mod copyright;
+mod filter;
 mod footer;
 mod header;
 mod item;
@@ -8,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use sycamore::context::{ContextProvider, ContextProviderProps};
 use sycamore::prelude::*;
 use uuid::Uuid;
-use log::debug;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Todo {
@@ -25,19 +25,18 @@ pub struct AppState {
 
 impl AppState {
     fn add_todo(&self, title: String) {
-        let new_todos: Vec<Signal<Todo>> = self.todos
-                            .get()
-                            .as_ref()
-                            .clone()
-                            .into_iter()
-                            .chain(Some(Signal::new(Todo {
-                                title,
-                                completed: false,
-                                id: Uuid::new_v4(),
-                            })))
-                            .collect();
-
-        debug!("new todos: {:?}", new_todos);
+        let new_todos: Vec<Signal<Todo>> = self
+            .todos
+            .get()
+            .as_ref()
+            .clone()
+            .into_iter()
+            .chain(Some(Signal::new(Todo {
+                title,
+                completed: false,
+                id: Uuid::new_v4(),
+            })))
+            .collect();
         self.todos.set(new_todos)
     }
 
@@ -131,6 +130,20 @@ impl Filter {
     }
 }
 
+#[component(App<G>)]
+fn app() -> Template<G> {
+    template! {
+        div(class="todomvc-wrapper") {
+            section(class="todoapp") {
+                header::Header()
+                list::List()
+                footer::Footer()
+            }
+            copyright::Copyright()
+        }
+    }
+}
+
 const KEY: &str = "todos-sycamore";
 
 fn main() {
@@ -163,19 +176,19 @@ fn main() {
         local_storage.set_item(KEY, &serde_json::to_string(app_state.todos.get().as_ref()).unwrap()).unwrap();
     }));
 
-    sycamore::render(|| template! {
-        ContextProvider(ContextProviderProps {
-            value: app_state,
-            children: || template! {
-                div(class="todomvc-wrapper") {
-                    section(class="todoapp") {
-                        header::Header()
-                        list::List()
-                        footer::Footer()
-                    }
-                    copyright::Copyright()
+    /*
+    The application's root component. We use a provider to 'provide' access
+    to our app_state via the `use_context` API, which can be used from any
+    level in the view tree.
+    */
+    sycamore::render(|| {
+        template! {
+            ContextProvider(ContextProviderProps {
+                value: app_state,
+                children: || template! {
+                    App()
                 }
-            }
-        })
+            })
+        }
     });
 }

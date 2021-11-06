@@ -1,21 +1,11 @@
 use sycamore::context::use_context;
 use sycamore::prelude::*;
 
-use crate::{AppState, Filter};
-
-#[component(FilterComponent<G>)]
-fn filter_component(filter: Filter) -> Template<G> {
-    template! {
-        li {
-            a(
-                class="",
-                href=filter.url(),
-            ) {
-                (format!("{:?}", filter))
-            }
-        }
-    }
-}
+use crate::{
+    AppState,
+    Filter,
+    filter::TodoFilter,
+};
 
 #[component(Footer<G>)]
 pub fn footer() -> Template<G> {
@@ -32,6 +22,10 @@ pub fn footer() -> Template<G> {
         app_state.todos_left() < app_state.todos.get().len()
     }));
 
+    let handle_clear_completed = cloned!((app_state) => move |_| {
+        app_state.clear_completed()
+    });
+
     template! {
         footer(class="footer") {
             span(class="todo-count") {
@@ -39,17 +33,17 @@ pub fn footer() -> Template<G> {
                 span { " " (items_text()) " left" }
             }
             ul(class="filters") {
-                FilterComponent(Filter::All)
-                FilterComponent(Filter::Active)
-                FilterComponent(Filter::Completed)
+                TodoFilter(Filter::All)
+                TodoFilter(Filter::Active)
+                TodoFilter(Filter::Completed)
             }
 
             (if *has_completed_todos.get() {
-                template! {
-                    button(class="clear-completed") {
+                cloned!((handle_clear_completed) => template! {
+                    button(class="clear-completed", on:click=handle_clear_completed) {
                         "Clear completed"
                     }
-                }
+                })
             } else {
                 Template::empty()
             })

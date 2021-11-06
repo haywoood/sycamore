@@ -1,7 +1,11 @@
 use sycamore::prelude::*;
 use sycamore::context::use_context;
 
-use crate::{AppState, Filter};
+use crate::{
+    AppState,
+    Filter,
+    item::Item,
+};
 
 #[component(List<G>)]
 pub fn list() -> Template<G> {
@@ -42,7 +46,7 @@ pub fn list() -> Template<G> {
                 Keyed(KeyedProps {
                     iterable: filtered_todos,
                     template: move |todo| template! {
-                        crate::item::Item(todo)
+                        Item(todo)
                     },
                     key: |todo| todo.get().id,
                 })
